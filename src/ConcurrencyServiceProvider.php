@@ -3,6 +3,7 @@
 namespace LaravelConcurrency;
 
 use Illuminate\Support\ServiceProvider;
+use LaravelConcurrency\Commands\RunTaskWorker;
 use LaravelMysqlQueue\MysqlQueueConnector;
 
 class ConcurrencyServiceProvider extends ServiceProvider
@@ -15,6 +16,10 @@ class ConcurrencyServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadMigrationsFrom(__DIR__ . '/Migrations');
+
+        $this->commands([
+            RunTaskWorker::class
+        ]);
     }
 
 //    /**

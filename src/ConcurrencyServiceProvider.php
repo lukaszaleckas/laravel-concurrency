@@ -1,6 +1,6 @@
 <?php
 
-namespace LaravelFallbackCache;
+namespace LaravelConcurrency;
 
 use Illuminate\Support\ServiceProvider;
 use LaravelMysqlQueue\MysqlQueueConnector;

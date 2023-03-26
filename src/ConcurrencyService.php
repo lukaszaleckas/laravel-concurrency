@@ -31,7 +31,7 @@ class ConcurrencyService
 
         return array_map(
             fn(Task $task) => $task->result,
-            $this->taskRepository->refresh(...$tasks)->toArray()
+            $tasks->toArray()
         );
     }
 }

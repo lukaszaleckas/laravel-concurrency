@@ -2,16 +2,15 @@
 
 namespace LaravelConcurrency\Commands;
 
-use App\Models\Task;
-use App\Services\Common\LockService;
 use Illuminate\Console\Command;
 use LaravelConcurrency\Exceptions\LockServiceException;
+use LaravelConcurrency\Models\Task;
 use LaravelConcurrency\Repositories\TaskRepository;
 
 class RunTaskWorker extends Command
 {
     /** @var string */
-    protected $signature = 'concurrency:run-task-worker {--sleep=20000}';
+    protected $signature = 'concurrency:run-task-worker {--sleep=20} {--once}';
 
     /** @var string */
     protected $description = 'Run task worker process.';
@@ -22,7 +21,7 @@ class RunTaskWorker extends Command
     /**
      * @param TaskRepository $taskRepository
      */
-    public function __construct(private TaskRepository $taskRepository)
+    public function __construct(private readonly TaskRepository $taskRepository)
     {
         parent::__construct();
 
@@ -38,6 +37,10 @@ class RunTaskWorker extends Command
     public function handle(): void
     {
         while (!$this->shouldQuit) {
+            if ($this->shouldRunOnlyOnce()) {
+                $this->shouldQuit = true;
+            }
+
             $task = $this->taskRepository->pop();
 
             if ($task === null) {
@@ -46,15 +49,32 @@ class RunTaskWorker extends Command
                 continue;
             }
 
-            $this->info('Processing: ' . $task->id);
-
-            $this->taskRepository->complete(
-                $task,
-                $task->getOriginalTask()->run()
-            );
-
-            $this->info('Processed: ' . $task->id);
+            $this->processTask($task);
         }
+    }
+
+    /**
+     * @param Task $task
+     * @return void
+     */
+    private function processTask(Task $task): void
+    {
+        $this->info('Processing: ' . $task->id);
+
+        $this->taskRepository->complete(
+            $task,
+            $task->getOriginalTask()->run()
+        );
+
+        $this->info('Processed: ' . $task->id);
+    }
+
+    /**
+     * @return bool
+     */
+    private function shouldRunOnlyOnce(): bool
+    {
+        return $this->option('once');
     }
 
     /**
@@ -63,7 +83,7 @@ class RunTaskWorker extends Command
     public function sleep(): void
     {
         usleep(
-            (int)$this->option('sleep')
+            (int)$this->option('sleep') * 1000
         );
     }
 

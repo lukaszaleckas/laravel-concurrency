@@ -4,16 +4,17 @@ namespace LaravelConcurrency\Repositories;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use LaravelConcurrency\Configuration;
 use LaravelConcurrency\Contracts\TaskInterface;
-use LaravelConcurrency\Exceptions\LockServiceException;
 use LaravelConcurrency\Models\Task;
+use LaravelConcurrency\Services\LockService;
 
 class TaskRepository
 {
     /**
-     * @param LockRepository $lockRepository
+     * @param LockService $lockService
      */
-    public function __construct(private LockRepository $lockRepository)
+    public function __construct(private LockService $lockService)
     {
     }
 
@@ -37,25 +38,25 @@ class TaskRepository
 
     /**
      * @return Task|null
-     * @throws LockServiceException
      */
     public function pop(): ?Task
     {
-        $this->lockRepository->acquireLock('async');
+        return $this->lockService->block(
+            Configuration::getLockName(),
+            function () {
+                /** @var Task|null $task */
+                $task = Task::query()
+                    ->where('is_locked', false)
+                    ->where('is_processed', false)
+                    ->first();
 
-        /** @var Task|null $task */
-        $task = Task::query()
-            ->where('is_locked', false)
-            ->where('is_processed', false)
-            ->first();
+                $task?->update([
+                    'is_locked' => true
+                ]);
 
-        $task?->update([
-            'is_locked' => true
-        ]);
-
-        $this->lockRepository->releaseLock('async');
-
-        return $task;
+                return $task;
+            }
+        );
     }
 
     /**
@@ -66,7 +67,7 @@ class TaskRepository
     public function complete(Task $task, mixed $result): Task
     {
         $task->update([
-            'result'       => $result,
+            'result'       => serialize($result),
             'is_locked'    => false,
             'is_processed' => true
         ]);

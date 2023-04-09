@@ -4,6 +4,6 @@ namespace LaravelConcurrency\Exceptions;
 
 use Exception;
 
-class LockServiceException extends Exception
+class TimeoutException extends Exception
 {
 }

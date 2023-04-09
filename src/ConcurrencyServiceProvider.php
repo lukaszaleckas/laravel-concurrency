@@ -4,34 +4,49 @@ namespace LaravelConcurrency;
 
 use Illuminate\Support\ServiceProvider;
 use LaravelConcurrency\Commands\RunTaskWorker;
-use LaravelMysqlQueue\MysqlQueueConnector;
 
 class ConcurrencyServiceProvider extends ServiceProvider
 {
-    public const CONNECTOR = 'mysql';
+    /**
+     * @return void
+     */
+    public function boot(): void
+    {
+        $this->loadMigrations();
+
+        $this->registerCommands();
+
+        $this->publishConfig();
+    }
 
     /**
      * @return void
      */
-    public function boot()
+    private function publishConfig(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/Migrations');
+        $this->publishes(
+            [
+                __DIR__ . '/../config/concurrency.php' => config_path('concurrency.php'),
+            ],
+            'concurrency'
+        );
+    }
 
+    /**
+     * @return void
+     */
+    private function loadMigrations(): void
+    {
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+    }
+
+    /**
+     * @return void
+     */
+    private function registerCommands(): void
+    {
         $this->commands([
             RunTaskWorker::class
         ]);
     }
-
-//    /**
-//     * @return void
-//     */
-//    private function publishConfig(): void
-//    {
-//        $this->publishes(
-//            [
-//                __DIR__ . '/Config/concurrency.php' => config_path('concurrency.php'),
-//            ],
-//            'concurrency'
-//        );
-//    }
 }

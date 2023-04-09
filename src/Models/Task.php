@@ -8,8 +8,8 @@ use LaravelConcurrency\Contracts\TaskInterface;
 
 /**
  * @property string $id
- * @property mixed $payload
- * @property mixed $result
+ * @property string $payload
+ * @property string $result
  * @property bool $is_locked
  * @property bool $is_processed
  * @property Carbon $created_at
@@ -25,8 +25,6 @@ class Task extends Model
 
     /** @var array<string, string> */
     protected $casts = [
-        'payload'      => 'json',
-        'result'       => 'json',
         'is_locked'    => 'boolean',
         'is_processed' => 'boolean',
     ];
@@ -37,5 +35,13 @@ class Task extends Model
     public function getOriginalTask(): TaskInterface
     {
         return unserialize($this->payload);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getOriginalResult(): mixed
+    {
+        return unserialize($this->result);
     }
 }

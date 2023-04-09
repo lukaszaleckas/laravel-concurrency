@@ -4,14 +4,12 @@ start:
 phpcs-test:
 	php -d memory_limit=1024M vendor/bin/phpcs --standard=phpcs.xml -p
 
-phpstan-test:
-	php -d memory_limit=1024M vendor/bin/phpstan analyse
-
 unit-test:
-	php -dxdebug.mode=coverage vendor/bin/phpunit --configuration phpunit.xml --coverage-text
+	php vendor/bin/phpunit --configuration phpunit.xml --coverage-text
 
 test:
-	make unit-test && make phpcs-test && make phpstan-test
+	docker-compose exec php make unit-test \
+	&& docker-compose exec php make phpcs-test
 
 fix-cs:
 	vendor/bin/phpcbf

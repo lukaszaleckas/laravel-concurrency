@@ -18,8 +18,8 @@ FROM php:8.1-cli as base
 RUN  apt-get update \
     && apt-get install -y --no-install-recommends build-essential git python \
     && pecl install pcov \
-    && docker-php-ext-enable pcov \
-    && docker-php-ext-install pdo_mysql
+    && docker-php-ext-install pcntl \
+    && docker-php-ext-enable pcov
 
 # Cleanup
 RUN rm -rf /var/lib/apt/lists/*

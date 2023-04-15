@@ -75,7 +75,7 @@ class ConcurrencyServiceTest extends TestCase
 
         self::assertEquals(
             [$firstExpectedValue, $secondExpectedValue],
-            $this->buildConcurrencyService()->wait()
+            $this->buildConcurrencyService()->setMaxWaitSeconds(1)->wait()
         );
     }
 

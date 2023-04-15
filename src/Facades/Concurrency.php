@@ -8,6 +8,8 @@ use LaravelConcurrency\Contracts\TaskInterface;
 
 /**
  * @method static array wait(TaskInterface ...$tasks)
+ * @method static ConcurrencyService setMaxWaitMilliseconds(int $milliseconds)
+ * @method static ConcurrencyService setMaxWaitSeconds(int $seconds)
  */
 class Concurrency extends Facade
 {

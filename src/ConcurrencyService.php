@@ -15,11 +15,18 @@ class ConcurrencyService
     private int $timeElapsed;
 
     /**
+     * @var int|null
+     */
+    private ?int $maxWaitMilliseconds;
+
+    /**
      * @param TaskRepository $taskRepository
      */
     public function __construct(private TaskRepository $taskRepository)
     {
         $this->resetTimeElapsed();
+
+        $this->setMaxWaitMilliseconds(null);
     }
 
     /**
@@ -39,6 +46,26 @@ class ConcurrencyService
         }
 
         return $this->getResult(...$taskModels);
+    }
+
+    /**
+     * @param int|null $milliseconds
+     * @return self
+     */
+    public function setMaxWaitMilliseconds(?int $milliseconds): self
+    {
+        $this->maxWaitMilliseconds = $milliseconds;
+
+        return $this;
+    }
+
+    /**
+     * @param int|null $seconds
+     * @return self
+     */
+    public function setMaxWaitSeconds(?int $seconds): self
+    {
+        return $this->setMaxWaitMilliseconds($seconds * 1000);
     }
 
     /**
@@ -94,7 +121,7 @@ class ConcurrencyService
      */
     private function sleepOrTimeout(): void
     {
-        if ($this->timeElapsed > Configuration::getMaxWaitMilliseconds()) {
+        if ($this->timeElapsed > $this->getMaxWaitMilliseconds()) {
             throw new TimeoutException();
         }
 
@@ -119,5 +146,17 @@ class ConcurrencyService
     private function pooled(): void
     {
         $this->timeElapsed += Configuration::getPoolMilliseconds();
+    }
+
+    /**
+     * @return int
+     */
+    private function getMaxWaitMilliseconds(): int
+    {
+        if ($this->maxWaitMilliseconds !== null) {
+            return $this->maxWaitMilliseconds;
+        }
+
+        return Configuration::getMaxWaitMilliseconds();
     }
 }
